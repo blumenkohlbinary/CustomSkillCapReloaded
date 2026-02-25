@@ -50,12 +50,45 @@ namespace CustomSkillCapReloaded
         private Harmony harmony;
 
         // ---- Spracherkennung -----------------------------------------------
-        // Prueft settingsScript.language (0=EN, 1=DE) und faellt auf OS-Sprache
-        // zurueck, falls settingsScript noch nicht geladen ist.
+        // 3-stufige Erkennung der Spielsprache:
+        //   1) settingsScript.language  (verfuegbar sobald Spiel geladen)
+        //   2) settings.txt direkt lesen (ES3 JSON, verfuegbar ab erstem Start)
+        //   3) OS-Sprache als letzter Fallback
+        // settings_int[0] = language  (0=EN, 1=DE, 2=TR, 3=CH, 4=FR, ...)
         private static bool IsGerman()
         {
-            var s = UnityEngine.Object.FindObjectOfType<settingsScript>();
-            if (s != null) return s.language == 1;
+            try
+            {
+                var s = UnityEngine.Object.FindObjectOfType<settingsScript>();
+                if (s != null) return s.language == 1;
+
+                string path = System.IO.Path.Combine(
+                    Application.persistentDataPath, "settings.txt");
+                if (System.IO.File.Exists(path))
+                {
+                    string json = System.IO.File.ReadAllText(path,
+                        System.Text.Encoding.UTF8);
+                    // ES3-Format: {"settings_int":{"__type":"int[]","value":[LANG,...
+                    int keyIdx = json.IndexOf("\"settings_int\"",
+                        System.StringComparison.Ordinal);
+                    if (keyIdx >= 0)
+                    {
+                        int valIdx = json.IndexOf("\"value\":[", keyIdx,
+                            System.StringComparison.Ordinal);
+                        if (valIdx >= 0)
+                        {
+                            valIdx += 9; // skip "value":[
+                            int end = json.IndexOfAny(new[] { ',', ']' }, valIdx);
+                            if (end > valIdx && int.TryParse(
+                                json.Substring(valIdx, end - valIdx).Trim(),
+                                out int lang))
+                                return lang == 1;
+                        }
+                    }
+                }
+            }
+            catch { }
+
             return Application.systemLanguage == SystemLanguage.German;
         }
 
