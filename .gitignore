@@ -1,0 +1,11 @@
+# Build-Ausgabe
+bin/
+obj/
+
+# Spiel-DLLs (urheberrechtlich geschuetzt – nicht hochladen!)
+lib/
+
+# NuGet
+*.user
+.vs/
+packages/
