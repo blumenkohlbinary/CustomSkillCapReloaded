@@ -49,30 +49,45 @@ namespace CustomSkillCapReloaded
 
         private Harmony harmony;
 
+        // ---- Spracherkennung -----------------------------------------------
+        // Prueft settingsScript.language (0=EN, 1=DE) und faellt auf OS-Sprache
+        // zurueck, falls settingsScript noch nicht geladen ist.
+        private static bool IsGerman()
+        {
+            var s = UnityEngine.Object.FindObjectOfType<settingsScript>();
+            if (s != null) return s.language == 1;
+            return Application.systemLanguage == SystemLanguage.German;
+        }
+
         private void Awake()
         {
             Logger = base.Logger;
+            bool de = IsGerman();
 
             CFG_IS_ENABLED = Config.Bind(
                 "General", "Enabled", true,
-                "Mod aktivieren / deaktivieren.");
+                de  ? "Mod aktivieren / deaktivieren."
+                    : "Enable or disable the mod entirely.");
 
             CFG_MajorSkillCap = Config.Bind(
                 "Skill Caps", "Major Skill Cap", 500f,
                 new ConfigDescription(
-                    "Maximum fuer den Primaerskill des Mitarbeiters (Vanilla: 100)",
+                    de  ? "Maximum fuer den Primaerskill des Mitarbeiters (Vanilla: 100)"
+                        : "Maximum for the employee's primary skill (Vanilla: 100)",
                     new AcceptableValueRange<float>(100f, 9999f)));
 
             CFG_MinorSkillCap = Config.Bind(
                 "Skill Caps", "Minor Skill Cap", 350f,
                 new ConfigDescription(
-                    "Maximum fuer Sekundaerskills OHNE Talent-Perk (Vanilla: 50)",
+                    de  ? "Maximum fuer Sekundaerskills OHNE Talent-Perk (Vanilla: 50)"
+                        : "Maximum for secondary skills without the Talent perk (Vanilla: 50)",
                     new AcceptableValueRange<float>(10f, 9999f)));
 
             CFG_TalentMinorSkillCap = Config.Bind(
                 "Skill Caps", "Talent + Minor Skill Cap", 450f,
                 new ConfigDescription(
-                    "Maximum fuer Sekundaerskills MIT Talent-Perk (Vanilla: 60)",
+                    de  ? "Maximum fuer Sekundaerskills MIT Talent-Perk (Vanilla: 60)"
+                        : "Maximum for secondary skills with the Talent perk (Vanilla: 60)",
                     new AcceptableValueRange<float>(10f, 9999f)));
 
             harmony = new Harmony(GUID);
