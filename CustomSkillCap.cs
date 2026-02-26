@@ -49,78 +49,30 @@ namespace CustomSkillCapReloaded
 
         private Harmony harmony;
 
-        // ---- Spracherkennung -----------------------------------------------
-        // 3-stufige Erkennung der Spielsprache:
-        //   1) settingsScript.language  (verfuegbar sobald Spiel geladen)
-        //   2) settings.txt direkt lesen (ES3 JSON, verfuegbar ab erstem Start)
-        //   3) OS-Sprache als letzter Fallback
-        // settings_int[0] = language  (0=EN, 1=DE, 2=TR, 3=CH, 4=FR, ...)
-        private static bool IsGerman()
-        {
-            try
-            {
-                var s = UnityEngine.Object.FindObjectOfType<settingsScript>();
-                if (s != null) return s.language == 1;
-
-                string path = System.IO.Path.Combine(
-                    Application.persistentDataPath, "settings.txt");
-                if (System.IO.File.Exists(path))
-                {
-                    string json = System.IO.File.ReadAllText(path,
-                        System.Text.Encoding.UTF8);
-                    // ES3-Format: {"settings_int":{"__type":"int[]","value":[LANG,...
-                    int keyIdx = json.IndexOf("\"settings_int\"",
-                        System.StringComparison.Ordinal);
-                    if (keyIdx >= 0)
-                    {
-                        int valIdx = json.IndexOf("\"value\":[", keyIdx,
-                            System.StringComparison.Ordinal);
-                        if (valIdx >= 0)
-                        {
-                            valIdx += 9; // skip "value":[
-                            int end = json.IndexOfAny(new[] { ',', ']' }, valIdx);
-                            if (end > valIdx && int.TryParse(
-                                json.Substring(valIdx, end - valIdx).Trim(),
-                                out int lang))
-                                return lang == 1;
-                        }
-                    }
-                }
-            }
-            catch { }
-
-            return Application.systemLanguage == SystemLanguage.German;
-        }
-
         private void Awake()
         {
             Logger = base.Logger;
-            bool de = IsGerman();
 
             CFG_IS_ENABLED = Config.Bind(
                 "General", "Enabled", true,
-                de  ? "Mod aktivieren / deaktivieren."
-                    : "Enable or disable the mod entirely.");
+                "Enable or disable the mod entirely.");
 
             CFG_MajorSkillCap = Config.Bind(
                 "Skill Caps", "Major Skill Cap", 500f,
                 new ConfigDescription(
-                    de  ? "Maximum fuer den Primaerskill des Mitarbeiters (Vanilla: 100)"
-                        : "Maximum for the employee's primary skill (Vanilla: 100)",
+                    "Maximum for the employee's primary skill (Vanilla: 100)",
                     new AcceptableValueRange<float>(100f, 9999f)));
 
             CFG_MinorSkillCap = Config.Bind(
                 "Skill Caps", "Minor Skill Cap", 350f,
                 new ConfigDescription(
-                    de  ? "Maximum fuer Sekundaerskills OHNE Talent-Perk (Vanilla: 50)"
-                        : "Maximum for secondary skills without the Talent perk (Vanilla: 50)",
+                    "Maximum for secondary skills without the Talent perk (Vanilla: 50)",
                     new AcceptableValueRange<float>(10f, 9999f)));
 
             CFG_TalentMinorSkillCap = Config.Bind(
                 "Skill Caps", "Talent + Minor Skill Cap", 450f,
                 new ConfigDescription(
-                    de  ? "Maximum fuer Sekundaerskills MIT Talent-Perk (Vanilla: 60)"
-                        : "Maximum for secondary skills with the Talent perk (Vanilla: 60)",
+                    "Maximum for secondary skills with the Talent perk (Vanilla: 60)",
                     new AcceptableValueRange<float>(10f, 9999f)));
 
             harmony = new Harmony(GUID);
