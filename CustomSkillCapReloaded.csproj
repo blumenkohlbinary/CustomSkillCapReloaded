@@ -6,7 +6,7 @@
     <AssemblyName>CustomSkillCapReloaded</AssemblyName>
     <RootNamespace>CustomSkillCapReloaded</RootNamespace>
     <Description>Custom Skill Cap – Reloaded: behebt den Sekundaerskill-Sprung-Bug und unterstuetzt alle Studio-Typen</Description>
-    <Version>2.0.0</Version>
+    <Version>2.4.1</Version>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Optimize>true</Optimize>
     <LangVersion>latest</LangVersion>
