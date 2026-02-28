@@ -2,17 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <!-- Eigener Name: koexistiert neben der alten CustomSkillCap.dll -->
+    <!-- Unique name: coexists alongside the old CustomSkillCap.dll -->
     <AssemblyName>CustomSkillCapReloaded</AssemblyName>
     <RootNamespace>CustomSkillCapReloaded</RootNamespace>
-    <Description>Custom Skill Cap – Reloaded: behebt den Sekundaerskill-Sprung-Bug und unterstuetzt alle Studio-Typen</Description>
-    <Version>2.4.1</Version>
+    <Description>Custom Skill Cap – Reloaded: fixes the secondary-skill jump bug and supports all studio types</Description>
+    <Version>2.5.1</Version>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Optimize>true</Optimize>
     <LangVersion>latest</LangVersion>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <OutDir>bin\Release\net46\</OutDir>
-    <!-- Eigenes Unterverzeichnis: beruehrt CustomSkillCap.dll im plugins-Root nicht -->
+    <!-- Own subdirectory: does not touch CustomSkillCap.dll in plugins root -->
     <PostBuildCopyPath>..\BepInEx\plugins\CustomSkillCapReloaded\</PostBuildCopyPath>
   </PropertyGroup>
 
@@ -32,9 +32,13 @@
       <HintPath>lib\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>lib\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
-  <!-- Nach Build: DLL in eigenes Unterverzeichnis (CustomSkillCapReloaded) kopieren -->
+  <!-- After build: copy DLL to own subdirectory (CustomSkillCapReloaded) -->
   <Target Name="DeployPlugin" AfterTargets="Build">
     <MakeDir Directories="$(PostBuildCopyPath)" />
     <Copy SourceFiles="$(OutDir)$(AssemblyName).dll"

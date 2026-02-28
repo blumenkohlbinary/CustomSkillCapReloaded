@@ -16,6 +16,8 @@ This version is fully compatible with the current game build, fixes a critical b
 | Talent perk detection | `perks` read as `byte[]` (wrong type, always ignored) | Correctly read as `bool[]` |
 | Sandbox mode | Not handled | Fully supported (all skills share MajorCap) |
 | Job Market | Not affected | Configurable high-skill applicants with power-curve rarity |
+| Recruitment search | Vanilla 3 tiers (0-100) | 10 scaled tiers (0-MajorCap) with localized names |
+| Developer legends | Vanilla fixed stats | Scaled to MajorCap (primary 80-95%, secondary 2-4%) |
 
 ## Features
 
@@ -27,6 +29,8 @@ This version is fully compatible with the current game build, fixes a critical b
 - Job Market skill boost: rare high-skill applicants with exponential rarity curve
 - Sandbox mode: all skills correctly share MajorCap (no primary/secondary distinction)
 - Cross-config validation: MinorCap is always clamped to MajorCap
+- **10 recruitment tiers** with skill ranges scaled to MajorCap, localized names (20 languages), and balanced pricing against EnhancedTraining Reloaded
+- **Developer legends** with skills scaled to MajorCap instead of vanilla fixed values
 - Compatible with [Job Market Tweaker](https://www.nexusmods.com/madgamestycoon2/mods/10) by Aerin_the_Lion
 - Drop-in replacement: reads existing config file from the original mod
 
@@ -78,6 +82,25 @@ Only the primary skill (matching the employee's profession) is boosted. Secondar
 
 **Job Market Tweaker compatibility:** This mod's Postfix runs after JMT's Prefix, so both work together without conflict.
 
+### Recruitment Search Tiers
+
+The employee search screen is extended from 3 vanilla tiers to 10 tiers, each specifying a skill range as a fraction of your configured MajorCap:
+
+| Tier | Name (EN) | Skill Range | Price | Chance | Work Points |
+|---|---|---|---|---|---|
+| 0 | Newcomer | 2–10% | $20,000 | 80% | 15 |
+| 1 | Young Professional | 10–20% | $37,500 | 75% | 20 |
+| 2 | Apprentice | 20–30% | $56,000 | 70% | 28 |
+| 3 | Skilled Worker | 30–40% | $68,000 | 65% | 38 |
+| 4 | Journeyman | 40–50% | $115,000 | 60% | 50 |
+| 5 | Specialist | 50–60% | $154,000 | 55% | 65 |
+| 6 | Senior | 60–70% | $315,000 | 50% | 85 |
+| 7 | Expert | 70–80% | $560,000 | 47% | 110 |
+| 8 | Master | 80–90% | $770,000 | 44% | 145 |
+| 9 | Legend | 90–100% | $1,910,000 | 42% | 185 |
+
+Pricing is balanced against [EnhancedTraining Reloaded](https://www.nexusmods.com/madgamestycoon2/mods/57) training costs, making high-tier recruitment a viable alternative to training. All tier names are localized in 20 languages.
+
 ## Building from Source
 
 ### Prerequisites
@@ -86,11 +109,13 @@ Only the primary skill (matching the employee's profession) is boosted. Secondar
 - The following DLLs copied into the `lib/` folder:
   - `Assembly-CSharp.dll` — from `Mad Games Tycoon 2_Data/Managed/`
   - `netstandard.dll` — from `Mad Games Tycoon 2_Data/Managed/`
+  - `UnityEngine.UI.dll` — from `Mad Games Tycoon 2_Data/Managed/`
 
 ```
 lib/
   Assembly-CSharp.dll
   netstandard.dll
+  UnityEngine.UI.dll
 ```
 
 ### Build
@@ -103,6 +128,20 @@ The compiled DLL is automatically copied to `BepInEx/plugins/CustomSkillCapReloa
 
 ## Technical Notes
 
+### Patch Architecture (v2.5.1)
+
+| Patch Class | Targets | Type |
+|---|---|---|
+| Patch_RemapSkillCap | `characterScript.GetSkillCap` + `Menu_NewGameCEO.GetSkillCap` | Postfix (TargetMethods) |
+| Patch_GetSkillCap_Skill | `characterScript.GetSkillCap_Skill` | Postfix |
+| Patch_Learn | `characterScript.Learn` | Transpiler + Safety-Postfix |
+| Patch_AllSkillBars | 6 bar methods across `GUI_Main`, `Menu_MitarbeiterUebersicht`, `Item_Arbeitsmarkt`, `Item_Personal_InRoom`, `Menu_NewGameCEO` | Transpiler (TargetMethods) |
+| Patch_GetValColorEmployee | `GUI_Main.GetValColorEmployee` | Prefix |
+| Patch_AllGetValColor | 13 UI classes' `GetValColor` | Prefix (TargetMethods) |
+| Patch_JobMarketSkillBoost | `charArbeitsmarkt.Create` | Postfix |
+| Patch_EmployeeSearch | `Menu_Mitarbeitersuche.Init` + `GetChance` | Postfix / Prefix |
+| BarPatchHelper | (shared transpiler logic) | Helper |
+
 ### The Secondary Skill Jump Bug
 
 The original mod's transpiler replaced every occurrence of `ldc.r4 100f` in `characterScript.Learn()` without checking the surrounding context. This caused certain internal calculations — not related to the hard cap — to use the configured cap value instead of the vanilla constant, resulting in secondary skills jumping directly to the maximum value when they exceeded approximately 90.
@@ -111,7 +150,7 @@ This rewrite uses context-aware instruction matching: a `ldc.r4 100f` is only re
 
 ### Color Normalization
 
-Vanilla uses fixed thresholds (30/70 on a 0–100 scale) to color skill values red/yellow/green. With custom caps, all skills would always appear green. This mod normalizes skill values to 0–100 before the vanilla color method runs. This is applied across all 15 UI classes that have their own `GetValColor()` method.
+Vanilla uses fixed thresholds (30/70 on a 0–100 scale) to color skill values red/yellow/green. With custom caps, all skills would always appear green. This mod normalizes skill values to 0–100 before the vanilla color method runs. This is applied across all 14 UI classes that have their own `GetValColor()` / `GetValColorEmployee()` method.
 
 ### Update Resistance
 
